@@ -1,31 +1,80 @@
-
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Threading;
 
-class MouseBlocker
+class InputBlocker
 {
+    private const int WH_KEYBOARD_LL = 13;
     private const int WH_MOUSE_LL = 14;
     private const int HC_ACTION = 0;
-    private const int WM_MOUSEMOVE = 0x0200;
-    private const int WM_LBUTTONDOWN = 0x0201;
-    private const int WM_LBUTTONUP = 0x0202;
-    private const int WM_RBUTTONDOWN = 0x0204;
-    private const int WM_RBUTTONUP = 0x0205;
-    private const int WM_MBUTTONDOWN = 0x0207;
-    private const int WM_MBUTTONUP = 0x0208;
+    private const int VK_ESCAPE = 0x1B;
 
-    private static IntPtr hookID = IntPtr.Zero;
+    private static IntPtr keyboardHookID = IntPtr.Zero;
+    private static IntPtr mouseHookID = IntPtr.Zero;
 
     public static void Main()
     {
-        hookID = SetHook(MouseHookCallback);
-        Console.WriteLine("Mouse input blocked. Press Enter to exit...");
-        Console.ReadLine();
-        UnhookWindowsHookEx(hookID);
+        try
+        {
+            // Set hooks for keyboard and mouse
+            keyboardHookID = SetKeyboardHook(KeyboardHookCallback);
+            mouseHookID = SetMouseHook(MouseHookCallback);
+
+            Console.WriteLine("Keyboard and Mouse input blocked. Press Ctrl+C to exit.");
+
+            // Keep the program running to block input
+            while (true)
+            {
+                Thread.Sleep(100); // Prevent high CPU usage
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+        finally
+        {
+            // Clean up hooks when the program ends
+            UnhookWindowsHookEx(keyboardHookID);
+            UnhookWindowsHookEx(mouseHookID);
+        }
     }
 
-    private static IntPtr SetHook(LowLevelMouseProc proc)
+    // Keyboard hook procedure
+    private static IntPtr KeyboardHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        if (nCode >= HC_ACTION)
+        {
+            // Block all keyboard inputs (including ESC key, but can be modified)
+            return (IntPtr)1; // Returning 1 blocks the key press
+        }
+        return CallNextHookEx(keyboardHookID, nCode, wParam, lParam);
+    }
+
+    // Mouse hook procedure
+    private static IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+    {
+        if (nCode >= HC_ACTION)
+        {
+            // Block all mouse actions
+            return (IntPtr)1; // Returning 1 blocks the mouse action
+        }
+        return CallNextHookEx(mouseHookID, nCode, wParam, lParam);
+    }
+
+    // Set keyboard hook
+    private static IntPtr SetKeyboardHook(LowLevelKeyboardProc proc)
+    {
+        using (Process curProcess = Process.GetCurrentProcess())
+        using (ProcessModule curModule = curProcess.MainModule)
+        {
+            return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
+        }
+    }
+
+    // Set mouse hook
+    private static IntPtr SetMouseHook(LowLevelMouseProc proc)
     {
         using (Process curProcess = Process.GetCurrentProcess())
         using (ProcessModule curModule = curProcess.MainModule)
@@ -34,19 +83,13 @@ class MouseBlocker
         }
     }
 
+    // Delegates for the keyboard and mouse hooks
+    private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
     private delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-    private static IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-    {
-        if (nCode >= HC_ACTION)
-        {
-            return (IntPtr)1; // Block all mouse actions
-        }
-        return CallNextHookEx(hookID, nCode, wParam, lParam);
-    }
-
+    // P/Invoke declarations
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+    private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
