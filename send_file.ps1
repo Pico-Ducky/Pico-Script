@@ -4,13 +4,13 @@ $File.Title = "Choisissez un fichier à envoyer"
 $null = $File.ShowDialog()
 $Path = $File.FileName
 
-$EmailFrom = "tonadresse@gmail.com"
-$EmailTo = "destinataire@example.com"
+$EmailFrom = "picoduckyraspberry@gmail.com"
+$EmailTo = "clement14bs@icloud.com"
 $Subject = "Fichier envoyé via PowerShell"
 $Body = "Voici le fichier demandé."
 $SMTPServer = "smtp.gmail.com"
 $SMTPPort = 587
-$Password = "ton_mot_de_passe_application"
+$Password = "derr olzd bjte tupv"
 
 $Message = New-Object System.Net.Mail.MailMessage $EmailFrom, $EmailTo, $Subject, $Body
 $Attachment = New-Object System.Net.Mail.Attachment $Path
